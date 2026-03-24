@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-white antialiased selection:bg-primary/30;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-surface/60 backdrop-blur-md border border-white/10;
+  }
+  
+  .glass-card {
+    @apply bg-surface/80 backdrop-blur-xl border border-white/5 shadow-xl transition-all duration-300;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-brand bg-clip-text text-transparent;
+  }
+}
+
+/* Custom Scrollbar for a premium feel */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: theme('colors.background');
+}
+
+::-webkit-scrollbar-thumb {
+  background: theme('colors.surface');
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.primary/50');
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) }
+  50% { transform: translateY(-14px) }
+}
+
+@keyframes glowShift {
+  0%, 100% { filter: drop-shadow(0 0 24px rgba(124,58,237,0.7)) drop-shadow(0 0 48px rgba(244,114,182,0.3)) }
+  50% { filter: drop-shadow(0 0 36px rgba(59,130,246,0.8)) drop-shadow(0 0 60px rgba(251,146,60,0.4)) }
+}
+
+@keyframes orbit {
+  0%   { transform: rotate(0deg) translateX(110px) rotate(0deg) }
+  100% { transform: rotate(360deg) translateX(110px) rotate(-360deg) }
+}
+
+@keyframes particle {
+  0%   { opacity: 0; transform: translate(0,0) scale(0) }
+  30%  { opacity: 1 }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.5) }
+}
+
+@keyframes titlePulse {
+  0%, 100% { letter-spacing: 3px }
+  50%      { letter-spacing: 5px }
+}
+
+@keyframes navGlow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(124,58,237,0.5)) }
+  50%      { filter: drop-shadow(0 0 12px rgba(244,114,182,0.6)) }
+}
