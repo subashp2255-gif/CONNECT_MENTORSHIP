@@ -36,7 +36,7 @@ export default defineConfig({
       }
     })
   ],
-  base: isElectronBuild ? './' : '/CONNECT_MENTORSHIP/',
+  base: isElectronBuild ? './' : (process.env.VITE_BASE || '/'),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
