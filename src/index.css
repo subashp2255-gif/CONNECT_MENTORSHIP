@@ -3,8 +3,109 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --card: #F2F1E6;
+    --ring: #A855F7;
+    --input: #FFFFFF;
+    --muted: #E8E7DB;
+    --accent: #A855F7;
+    --border: #000000;
+    --radius: 2rem;
+    --chart-1: #A855F7;
+    --chart-2: #36FF9B;
+    --chart-3: #000000;
+    --chart-4: #666666;
+    --chart-5: #C084FC;
+    --popover: #FFFFFF;
+    --primary: #A855F7;
+    --sidebar: #121212;
+    --spacing: 0.25rem;
+    --font-mono: JetBrains Mono, monospace;
+    --font-sans: Inter, sans-serif;
+    --secondary: #C084FC;
+    --background: #F2F1E6;
+    --font-serif: Georgia, serif;
+    --foreground: #000000;
+    --destructive: #FF4D4D;
+    --shadow-blur: 0px;
+    --shadow-color: #000000;
+    --sidebar-ring: #A855F7;
+    --shadow-spread: 0px;
+    --letter-spacing: -0.01em;
+    --shadow-opacity: 1.0;
+    --sidebar-accent: #1F1F1F;
+    --sidebar-border: #333333;
+    --card-foreground: #000000;
+    --shadow-offset-x: 4px;
+    --shadow-offset-y: 4px;
+    --sidebar-primary: #A855F7;
+    --muted-foreground: #666666;
+    --accent-foreground: #FFFFFF;
+    --popover-foreground: #000000;
+    --primary-foreground: #FFFFFF;
+    --sidebar-foreground: #FFFFFF;
+    --secondary-foreground: #000000;
+    --destructive-foreground: #FFFFFF;
+    --sidebar-accent-foreground: #FFFFFF;
+    --sidebar-primary-foreground: #FFFFFF;
+  }
+
+  .dark {
+    --card: #1F1F1F;
+    --ring: #A855F7;
+    --input: #1F1F1F;
+    --muted: #2A2A2A;
+    --accent: #A855F7;
+    --border: #333333;
+    --radius: 2rem;
+    --chart-1: #A855F7;
+    --chart-2: #36FF9B;
+    --chart-3: #FFFFFF;
+    --chart-4: #666666;
+    --chart-5: #121212;
+    --popover: #1F1F1F;
+    --primary: #A855F7;
+    --sidebar: #000000;
+    --spacing: 0.25rem;
+    --font-mono: JetBrains Mono, monospace;
+    --font-sans: Inter, sans-serif;
+    --secondary: #2A2A2A;
+    --background: #121212;
+    --font-serif: Georgia, serif;
+    --foreground: #F2F1E6;
+    --destructive: #800000;
+    --shadow-blur: 0px;
+    --shadow-color: #000000;
+    --sidebar-ring: #A855F7;
+    --shadow-spread: 0px;
+    --letter-spacing: -0.01em;
+    --shadow-opacity: 1.0;
+    --sidebar-accent: #1F1F1F;
+    --sidebar-border: #333333;
+    --card-foreground: #F2F1E6;
+    --shadow-offset-x: 4px;
+    --shadow-offset-y: 4px;
+    --sidebar-primary: #A855F7;
+    --muted-foreground: #A0A0A0;
+    --accent-foreground: #FFFFFF;
+    --popover-foreground: #F2F1E6;
+    --primary-foreground: #FFFFFF;
+    --sidebar-foreground: #FFFFFF;
+    --secondary-foreground: #F2F1E6;
+    --destructive-foreground: #FFFFFF;
+    --sidebar-accent-foreground: #FFFFFF;
+    --sidebar-primary-foreground: #FFFFFF;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-white antialiased selection:bg-primary/30;
+    background-color: var(--background);
+    color: var(--foreground);
+    @apply antialiased selection:bg-primary/30;
+    font-family: 'Plus Jakarta Sans', sans-serif;
   }
 }
 
@@ -19,6 +120,32 @@
 
   .text-gradient {
     @apply bg-gradient-brand bg-clip-text text-transparent;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .note-card-glow {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+  }
+  .note-card-glow:hover {
+    border-color: rgba(124, 111, 247, 0.4);
+    box-shadow: 0 0 0 1px rgba(124, 111, 247, 0.15);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .stat-card-glow {
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .stat-card-glow:hover {
+    border-color: rgba(124,111,247,0.3) !important;
+    transform: translateY(-2px);
   }
 }
 
@@ -54,6 +181,31 @@
 @keyframes orbit {
   0%   { transform: rotate(0deg) translateX(110px) rotate(0deg) }
   100% { transform: rotate(360deg) translateX(110px) rotate(-360deg) }
+}
+
+@keyframes orbit-small {
+  0%   { transform: rotate(0deg) translateX(65px) rotate(0deg) }
+  100% { transform: rotate(360deg) translateX(65px) rotate(-360deg) }
+}
+
+@keyframes orbit-medium {
+  0%   { transform: rotate(0deg) translateX(72px) rotate(0deg) }
+  100% { transform: rotate(360deg) translateX(72px) rotate(-360deg) }
+}
+
+@keyframes orbit-sidebar {
+  0%   { transform: rotate(0deg) translateX(22px) rotate(0deg) }
+  100% { transform: rotate(360deg) translateX(22px) rotate(-360deg) }
+}
+
+@keyframes orbit-large {
+  0%   { transform: rotate(0deg) translateX(82px) rotate(0deg) }
+  100% { transform: rotate(360deg) translateX(82px) rotate(-360deg) }
+}
+
+@keyframes orbit-landing {
+  0%   { transform: rotate(0deg) translateX(98px) rotate(0deg) }
+  100% { transform: rotate(360deg) translateX(98px) rotate(-360deg) }
 }
 
 @keyframes particle {

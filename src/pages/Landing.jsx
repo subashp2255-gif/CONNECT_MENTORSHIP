@@ -3,6 +3,7 @@ import { motion, useInView } from 'framer-motion';
 import { Search, Users, Video, BookOpen, Star, ArrowRight, UserPlus, CheckCircle2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import Button from '../components/ui/Button';
+import ShootingStarsGrid from '../components/ui/ShootingStarsGrid';
 import Input from '../components/ui/Input';
 import StatCard from '../components/shared/StatCard';
 import MentorCard from '../components/shared/MentorCard';
@@ -26,7 +27,13 @@ export default function Landing() {
   return (
     <div className="flex flex-col flex-1 w-full bg-background">
       {/* HERO SECTION */}
-      <section className="relative min-h-[90vh] flex items-center justify-center px-4 overflow-hidden pt-10">
+      <ShootingStarsGrid
+        className="-mt-20 min-h-[90vh] w-full rounded-none border-none bg-transparent dark:bg-transparent pt-20"
+        contentClassName="flex items-center justify-center py-10 relative"
+        starCount={60}
+        shootingStarCount={8}
+        interactive={true}
+      >
         <div className="absolute inset-0 w-full h-full pointer-events-none">
            {/* Floating Avatars Background (Simulated via simple absolute positioned elements) */}
            <motion.img initial={{ y: 20, opacity: 0 }} animate={{ y: [0, -20, 0], opacity: 0.6 }} transition={{ duration: 4, repeat: Infinity, delay: 0.5 }} src={mentors[0].avatar} className="absolute left-[10%] top-[20%] w-16 h-16 rounded-full border border-white/10 blur-[1px]" />
@@ -41,18 +48,50 @@ export default function Landing() {
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             className="flex justify-center mb-6"
           >
-            <img 
-              src={`${import.meta.env.BASE_URL}logo.png`}
-              alt="Connect"
-              className="w-32 h-32 md:w-40 md:h-40 object-contain"
-              style={{
-                filter: 'drop-shadow(0 0 32px rgba(124,58,237,0.6)) drop-shadow(0 0 64px rgba(244,114,182,0.3))',
-                animation: 'glowShift 3s ease-in-out infinite'
-              }}
-            />
+            <div className="relative w-32 h-32 md:w-40 md:h-40 flex items-center justify-center select-none pointer-events-none">
+              {/* Orbiting Rings */}
+              <div 
+                className="absolute w-[136px] h-[136px] md:w-[172px] md:h-[172px] rounded-full border-t border-r border-transparent" 
+                style={{
+                  borderTopColor: 'rgba(124,58,237,0.5)',
+                  borderRightColor: 'rgba(124,58,237,0.15)',
+                  animation: 'spin 4s linear infinite'
+                }}
+              />
+              <div 
+                className="absolute w-[152px] h-[152px] md:w-[195px] md:h-[195px] rounded-full border-b border-l border-transparent" 
+                style={{
+                  borderBottomColor: 'rgba(244,114,182,0.4)',
+                  borderLeftColor: 'rgba(244,114,182,0.12)',
+                  animation: 'spin 6s linear infinite reverse'
+                }}
+              />
+
+              {/* Orbiting Dots - Mobile */}
+              <div className="absolute w-1.5 h-1.5 rounded-full md:hidden" style={{ background: '#a78bfa', animation: 'orbit-large 3s linear infinite' }} />
+              <div className="absolute w-1.5 h-1.5 rounded-full md:hidden" style={{ background: '#f472b6', animation: 'orbit-large 5s linear infinite', animationDelay: '-1.5s' }} />
+              <div className="absolute w-1.5 h-1.5 rounded-full md:hidden" style={{ background: '#60a5fa', animation: 'orbit-large 4s linear infinite', animationDelay: '-2s' }} />
+              <div className="absolute w-1.5 h-1.5 rounded-full md:hidden" style={{ background: '#fb923c', animation: 'orbit-large 6s linear infinite', animationDelay: '-3s' }} />
+
+              {/* Orbiting Dots - Desktop */}
+              <div className="hidden md:block absolute w-1.5 h-1.5 rounded-full" style={{ background: '#a78bfa', animation: 'orbit-landing 3s linear infinite' }} />
+              <div className="hidden md:block absolute w-1.5 h-1.5 rounded-full" style={{ background: '#f472b6', animation: 'orbit-landing 5s linear infinite', animationDelay: '-1.5s' }} />
+              <div className="hidden md:block absolute w-1.5 h-1.5 rounded-full" style={{ background: '#60a5fa', animation: 'orbit-landing 4s linear infinite', animationDelay: '-2s' }} />
+              <div className="hidden md:block absolute w-1.5 h-1.5 rounded-full" style={{ background: '#fb923c', animation: 'orbit-landing 6s linear infinite', animationDelay: '-3s' }} />
+
+              <img 
+                src={`${import.meta.env.BASE_URL}logo.png`}
+                alt="Connect"
+                className="w-32 h-32 md:w-40 md:h-40 object-contain relative z-10"
+                style={{
+                  filter: 'drop-shadow(0 0 32px rgba(124,58,237,0.6)) drop-shadow(0 0 64px rgba(244,114,182,0.3))',
+                  animation: 'glowShift 3s ease-in-out infinite'
+                }}
+              />
+            </div>
           </motion.div>
           <Badge className="mb-6 inline-flex" variant="primary">#1 Platform for College Students</Badge>
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight text-white">
             Find Your Perfect <br className="hidden md:block" />
             <span className="bg-gradient-brand bg-clip-text text-transparent">College Mentor</span>
           </h1>
@@ -77,7 +116,7 @@ export default function Landing() {
             <Link to="/register"><Button size="lg" variant="outline" className="w-full sm:w-auto bg-surface"><UserPlus className="w-5 h-5 mr-2" /> Become a Mentor</Button></Link>
           </div>
         </div>
-      </section>
+      </ShootingStarsGrid>
 
       {/* STATS SECTION */}
       <section ref={statsRef} className="py-20 px-4 max-w-7xl mx-auto w-full">
@@ -140,9 +179,9 @@ export default function Landing() {
         </div>
 
         {/* Horizontal scroll on mobile, grid on desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6 overflow-x-auto sm:overflow-visible pb-4 snap-x snap-mandatory hide-scrollbar">
           {mentors.slice(0, 6).map((mentor, idx) => (
-            <motion.div key={mentor.id} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }}>
+            <motion.div key={mentor.id} className="min-w-[85vw] sm:min-w-0 snap-center shrink-0" initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }}>
               <MentorCard mentor={mentor} />
             </motion.div>
           ))}
@@ -162,10 +201,10 @@ export default function Landing() {
           <p className="text-text-muted text-lg max-w-2xl mx-auto">See how CoNnEcT has helped students land their dream internships and jobs.</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto md:overflow-visible pb-4 snap-x snap-mandatory hide-scrollbar">
           {reviews.slice(0, 3).map((review, idx) => (
-             <motion.div key={review.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.2 }}>
-                <ReviewCard review={review} />
+             <motion.div key={review.id} className="min-w-[85vw] md:min-w-0 snap-center shrink-0 flex h-full" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.2 }}>
+                <ReviewCard review={review} className="flex-1" />
              </motion.div>
           ))}
         </div>

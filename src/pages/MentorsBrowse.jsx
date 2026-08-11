@@ -1,27 +1,62 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, X, Zap } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { mentors } from '../data/mockData';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import MentorCard from '../components/shared/MentorCard';
 import SkillChip from '../components/shared/SkillChip';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MentorCardSkeleton } from '../components/ui/Skeleton';
+import Select from '../components/ui/Select';
 
 export default function MentorsBrowse() {
-  const { searchQuery, setSearchQuery, activeFilters, setFilter, clearFilters } = useStore();
+  const { searchQuery, setSearchQuery, activeFilters, setFilter, clearFilters, mentorList, fetchMentors } = useStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    fetchMentors();
+  }, [fetchMentors]);
+
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState('Best Rated'); // Best Rated, Most Sessions, Newest
+  const [isLoadingGrid, setIsLoadingGrid] = useState(false);
+  
+  // Local state for debouncing
+  const [localSearch, setLocalSearch] = useState(searchQuery);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => setSearchQuery(localSearch), 300);
+    return () => clearTimeout(timer);
+  }, [localSearch, setSearchQuery]);
+
+  // Sync state to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('q', searchQuery);
+    if (activeFilters.skills.length) params.set('skills', activeFilters.skills.join(','));
+    if (activeFilters.companies.length) params.set('companies', activeFilters.companies.join(','));
+    if (activeFilters.colleges.length) params.set('colleges', activeFilters.colleges.join(','));
+    if (activeFilters.sessionTypes.length) params.set('type', activeFilters.sessionTypes.join(','));
+    setSearchParams(params, { replace: true });
+  }, [searchQuery, activeFilters, setSearchParams]);
+
+  useEffect(() => {
+    setIsLoadingGrid(true);
+    const timer = setTimeout(() => setIsLoadingGrid(false), 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery, activeFilters, sortBy]);
 
   // Extract unique filter options from mock data
-  const allSkills = useMemo(() => Array.from(new Set(mentors.flatMap(m => m.skills))).sort(), []);
-  const allCompanies = useMemo(() => Array.from(new Set(mentors.map(m => m.company))).sort(), []);
-  const allColleges = useMemo(() => Array.from(new Set(mentors.map(m => m.college))).sort(), []);
-  const allSessionTypes = useMemo(() => Array.from(new Set(mentors.flatMap(m => m.sessionTypes))).sort(), []);
+  const allSkills = useMemo(() => Array.from(new Set(mentorList.flatMap((m) => m.skills))).sort(), [mentorList]);
+  const allCompanies = useMemo(() => Array.from(new Set(mentorList.map((m) => m.company))).sort(), [mentorList]);
+  const allColleges = useMemo(() => Array.from(new Set(mentorList.map((m) => m.college))).sort(), [mentorList]);
+  const allSessionTypes = useMemo(() => Array.from(new Set(mentorList.flatMap((m) => m.sessionTypes))).sort(), [mentorList]);
 
   // Filter and Sort Mentors
   const filteredMentors = useMemo(() => {
-    let result = [...mentors];
+    let result = [...mentorList];
 
     // Search
     if (searchQuery) {
@@ -55,7 +90,7 @@ export default function MentorsBrowse() {
     }
 
     return result;
-  }, [searchQuery, activeFilters, sortBy]);
+  }, [mentorList, searchQuery, activeFilters, sortBy]);
 
   const activeFilterCount = activeFilters.skills.length + activeFilters.companies.length + activeFilters.colleges.length + activeFilters.sessionTypes.length;
 
@@ -117,8 +152,8 @@ export default function MentorsBrowse() {
           <Input 
             icon={Search}
             placeholder="Search mentors, skills..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             className="w-full md:w-64"
           />
           <button 
@@ -180,28 +215,47 @@ export default function MentorsBrowse() {
               ))}
             </div>
 
-            {/* Sort Dropdown */}
             <div className="flex items-center flex-shrink-0 gap-2">
               <span className="text-sm text-text-muted">Sort by:</span>
-              <select 
+              <Select
+                size="sm"
+                className="w-40"
+                options={['Best Rated', 'Most Sessions', 'Newest']}
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-surface border border-border rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
-              >
-                <option>Best Rated</option>
-                <option>Most Sessions</option>
-                <option>Newest</option>
-              </select>
+                onChange={setSortBy}
+              />
             </div>
           </div>
 
           {/* Grid */}
-          {filteredMentors.length > 0 ? (
+          {isLoadingGrid ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredMentors.map((mentor) => (
-                <MentorCard key={mentor.id} mentor={mentor} />
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <MentorCardSkeleton key={idx} />
               ))}
             </div>
+          ) : filteredMentors.length > 0 ? (
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: {},
+                visible: { transition: { staggerChildren: 0.05 } }
+              }}
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+            >
+              {filteredMentors.map((mentor) => (
+                <motion.div
+                  key={mentor.id}
+                  variants={{
+                    hidden: { opacity: 0, y: 14 },
+                    visible: { opacity: 1, y: 0, transition: { duration: 0.2 } }
+                  }}
+                >
+                  <MentorCard mentor={mentor} />
+                </motion.div>
+              ))}
+            </motion.div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-12 text-center border border-dashed border-border rounded-2xl bg-surface/50">
               <div className="w-16 h-16 rounded-full bg-panel flex items-center justify-center mb-4 border border-border">
@@ -209,7 +263,7 @@ export default function MentorsBrowse() {
               </div>
               <h3 className="text-xl font-bold mb-2">No mentors found</h3>
               <p className="text-text-muted mb-6 max-w-sm">We couldn't find any mentors matching your exact filters. Try tweaking your search.</p>
-              <Button onClick={clearFilters}>Clear all filters</Button>
+              <Button onClick={() => { clearFilters(); setLocalSearch(''); }}>Clear all filters</Button>
             </div>
           )}
 

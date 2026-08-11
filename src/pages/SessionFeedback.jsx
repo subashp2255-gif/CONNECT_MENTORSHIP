@@ -3,13 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Star, CheckCircle2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useStore } from '../store/useStore';
-import { sessions, mentors } from '../data/mockData';
+import { mentors } from '../data/mockData';
 import Button from '../components/ui/Button';
+import LazyImage from '../components/ui/LazyImage';
 
 export default function SessionFeedback() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isLoggedIn } = useStore();
+  const { isLoggedIn, sessions } = useStore();
   
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -67,7 +68,7 @@ export default function SessionFeedback() {
           
           {/* Session Summary Card */}
           <div className="flex items-center gap-4 p-4 rounded-xl bg-panel border border-border mb-8">
-            <img src={mentor.avatar} alt="" className="w-12 h-12 rounded-full border border-white/10" />
+            <LazyImage src={mentor.avatar} alt={mentor.name} className="w-12 h-12 rounded-full border border-white/10 object-cover" placeholderClassName="w-12 h-12 rounded-full" />
             <div>
               <p className="font-bold text-white">{mentor.name}</p>
               <p className="text-sm text-text-muted">{session.type} • {session.duration} mins</p>

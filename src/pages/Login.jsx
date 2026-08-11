@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Sparkles, Mail, Lock, Chrome, ArrowRight } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useStore } from '../store/useStore';
 import { mentees, mentors } from '../data/mockData';
 import Input from '../components/ui/Input';
@@ -9,44 +11,123 @@ import Button from '../components/ui/Button';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useStore();
 
-  const handleLogin = (e, asRole = 'mentee') => {
+  const handleLogin = async (e, asRole = 'mentee') => {
     e?.preventDefault();
+    setEmailError('');
+    setPasswordError('');
+    
+    let hasError = false;
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      setEmailError('Email is required');
+      hasError = true;
+    } else if (!emailRegex.test(email.trim())) {
+      setEmailError('Please enter a valid email address');
+      hasError = true;
+    }
+    
+    // Validate password min 6 chars
+    if (!password.trim()) {
+      setPasswordError('Password is required');
+      hasError = true;
+    } else if (password.trim().length < 6) {
+      setPasswordError('Password must be at least 6 characters');
+      hasError = true;
+    }
+    
+    if (hasError) return;
+
     setIsLoading(true);
 
-    // Simulate network request
-    setTimeout(() => {
-      // Mock auth logic: find user in mentees or mentors
-      const mentorMatch = mentors.find(m => m.id === 'm1'); // For demo, use m1 if mentor
-      const menteeMatch = mentees.find(m => m.id === 'u1'); // For demo, use u1 if mentee
+    try {
+      // MOCK LOGIN
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (asRole === 'mentor') {
-        login(mentorMatch, 'mentor');
+      const { users } = useStore.getState();
+      const user = users.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
+
+      if (!user) {
+        throw new Error('Invalid email or password');
+      }
+
+      if (password.trim() !== user.password) {
+        throw new Error('Invalid email or password');
+      }
+
+      if (user.accountStatus === 'blocked') {
+        throw new Error('Your CONNECT account has been blocked. Contact support for more information.');
+      }
+      if (user.accountStatus === 'suspended') {
+        throw new Error('Your account is temporarily suspended. Please contact admin.');
+      }
+      if (user.accountStatus === 'deleted') {
+        throw new Error('This account has been deleted.');
+      }
+
+      // If user is admin logging in via normal login page, let's allow it but redirect to admin dashboard
+      if (user.role === 'admin') {
+        login(user, 'admin');
+        toast.success(`Welcome back, Admin ${user.name.split(' ')[0]}!`);
+        navigate('/admin/dashboard');
+        return;
+      }
+
+      login(user, user.role);
+      toast.success(`Welcome back, ${user.name.split(' ')[0]}!`);
+      
+      if (user.role === 'mentor') {
         navigate('/mentor/dashboard');
       } else {
-        login(menteeMatch, 'mentee');
         navigate('/dashboard');
       }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error(error.message || 'Invalid email or password');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  const handleMockLogin = async (role) => {
+    setIsLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      const { users } = useStore.getState();
+      const user = users.find(u => u.role === role && u.accountStatus === 'active');
+      if (!user) {
+        throw new Error(`No active ${role} user found for mock login.`);
+      }
+
+      login(user, user.role);
+      toast.success(`Welcome back, ${user.name.split(' ')[0]}!`);
+      
+      if (user.role === 'mentor') {
+        navigate('/mentor/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      console.error('Mock Login error:', error);
+      toast.error(error.message || 'Mock login failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 w-full">
-      <div className="w-full max-w-md animate-fadeUp">
+      <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
         
         {/* Header */}
         <div className="text-center mb-10">
-          <Link to="/" className="inline-flex items-center gap-2 mb-6 group justify-center w-full">
-            <img 
-              src={`${import.meta.env.BASE_URL}logo.png`} 
-              alt="CoNnEcT" 
-              className="w-32 h-32 object-contain mx-auto drop-shadow-[0_0_15px_rgba(124,58,237,0.5)] group-hover:scale-105 transition-transform" 
-            />
-          </Link>
           <h2 className="text-3xl font-extrabold text-white mb-2">Welcome back</h2>
           <p className="text-text-muted">Sign in to your account to continue</p>
         </div>
@@ -63,7 +144,11 @@ export default function Login() {
               icon={Mail}
               placeholder="you@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailError) setEmailError('');
+              }}
+              error={emailError}
               required
             />
             
@@ -73,7 +158,11 @@ export default function Login() {
               icon={Lock}
               placeholder="••••••••"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (passwordError) setPasswordError('');
+              }}
+              error={passwordError}
               required
             />
 
@@ -102,14 +191,16 @@ export default function Login() {
 
             <div className="mt-6 flex flex-col gap-3">
               <button 
-                onClick={(e) => handleLogin(e, 'mentee')}
+                type="button"
+                onClick={() => handleMockLogin('mentee')}
                 className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-border rounded-xl text-sm font-medium text-white bg-panel hover:bg-white/5 transition-colors focus:outline-none focus:ring-1 focus:ring-white"
               >
                 <Chrome className="w-5 h-5" />
                 Sign in with Google (Simulate Mentee)
               </button>
               <button 
-                onClick={(e) => handleLogin(e, 'mentor')}
+                type="button"
+                onClick={() => handleMockLogin('mentor')}
                 className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-border rounded-xl text-sm font-medium text-white bg-panel hover:bg-white/5 transition-colors focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 Sign in as Mock Mentor <ArrowRight className="w-4 h-4 ml-1 text-primary-light" />
@@ -124,7 +215,13 @@ export default function Login() {
             Register for free
           </Link>
         </p>
-      </div>
+        <p className="mt-4 text-center text-xs text-text-dim">
+          Are you an administrator?{' '}
+          <Link to="/admin/login" className="font-semibold text-primary-light hover:text-white hover:underline transition-colors">
+            Login to Console
+          </Link>
+        </p>
+      </motion.div>
     </div>
   );
 }

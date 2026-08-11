@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Sparkles, Twitter, Linkedin, Github } from 'lucide-react';
+import { useStore } from '../../store/useStore';
 
 export default function Footer() {
+  const { role } = useStore();
   return (
     <footer className="bg-surface border-t border-border pt-16 pb-8 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -33,7 +35,9 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-bold mb-4">Platform</h4>
             <ul className="space-y-3">
-              <li><Link to="/mentors" className="text-text-muted hover:text-primary-light transition-colors">Find Mentors</Link></li>
+              {role !== 'mentor' && (
+                <li><Link to="/mentors" className="text-text-muted hover:text-primary-light transition-colors">Find Mentors</Link></li>
+              )}
               <li><Link to="/register" className="text-text-muted hover:text-primary-light transition-colors">Become a Mentor</Link></li>
               <li><a href="#" className="text-text-muted hover:text-primary-light transition-colors">How it Works</a></li>
               <li><a href="#" className="text-text-muted hover:text-primary-light transition-colors">Pricing</a></li>

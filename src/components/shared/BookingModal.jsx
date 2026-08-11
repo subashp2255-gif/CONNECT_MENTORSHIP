@@ -11,6 +11,9 @@ import toast from 'react-hot-toast';
 import { useStore } from '../../store/useStore';
 import Button from '../ui/Button';
 import SessionTypeCard from './SessionTypeCard';
+import LazyImage from '../ui/LazyImage';
+import { triggerSimulatedReminders } from '../../utils/notifications';
+import Select from '../ui/Select';
 
 const logo = '/logo.png';
 
@@ -21,7 +24,9 @@ export default function BookingModal({ isOpen, onClose, mentor }) {
   const [date, setDate] = useState(null);
   const [timeSlot, setTimeSlot] = useState('');
   const [message, setMessage] = useState('');
+  const [selectedGoalId, setSelectedGoalId] = useState('');
   const navigate = useNavigate();
+  const { currentUser, addSessionToDb, addNotification, goals } = useStore();
 
   const [meetLink] = useState(
     () => 'meet.google.com/' + 
@@ -90,6 +95,7 @@ export default function BookingModal({ isOpen, onClose, mentor }) {
     setDate(null);
     setTimeSlot('');
     setMessage('');
+    setSelectedGoalId('');
   };
 
   const handleClose = () => {
@@ -101,8 +107,28 @@ export default function BookingModal({ isOpen, onClose, mentor }) {
     resetBookingData();
   };
 
-  const handleConfirm = () => {
-    setStep(6);
+  const handleConfirm = async () => {
+    const dateText = date ? format(date, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
+    const slotAs24Hour = timeSlot ? new Date(`2000-01-01 ${timeSlot}`).toTimeString().slice(0, 8) : '09:00:00';
+    const scheduledAt = `${dateText}T${slotAs24Hour}Z`;
+    
+    try {
+      await addSessionToDb({
+        mentorId: mentor.id,
+        menteeId: currentUser.id,
+        type: sessionType,
+        scheduledAt,
+        duration,
+        meetLink: `https://${meetLink}`,
+        goalId: selectedGoalId || null
+      });
+      
+      addNotification(`Session booked with ${mentor.name || mentor.full_name} on ${format(date || new Date(), 'MMM d')}.`);
+      triggerSimulatedReminders(mentor.name || mentor.full_name, dateText, slotAs24Hour);
+      setStep(6);
+    } catch (error) {
+      toast.error('Failed to book session. Please try again.');
+    }
   };
 
   if (!isOpen) return null;
@@ -159,12 +185,16 @@ export default function BookingModal({ isOpen, onClose, mentor }) {
               <h3 className="text-lg font-bold mb-4 text-center">What kind of help do you need?</h3>
               <div className="grid sm:grid-cols-2 gap-4">
                 {['Mock Interview', 'Project Guidance', 'Career Chat', 'Resume Review'].map(type => (
-                  <SessionTypeCard
-                    key={type}
-                    type={type}
-                    selected={sessionType === type}
-                    onClick={() => setSessionType(type)}
-                  />
+                  <div key={type} className="relative">
+                    <SessionTypeCard
+                      type={type}
+                      selected={sessionType === type}
+                      onClick={() => setSessionType(type)}
+                    />
+                    <div className="absolute top-4 right-4 px-2 py-1 bg-surface border border-border rounded-lg text-xs font-bold text-primary-light pointer-events-none">
+                      {mentor?.pricing?.[type] === 0 || !mentor?.pricing?.[type] ? 'Free' : `$${mentor.pricing[type]}`}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -256,8 +286,24 @@ export default function BookingModal({ isOpen, onClose, mentor }) {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Hi! I need help with..."
-                className="w-full flex-1 min-h-[150px] bg-panel border border-border rounded-xl p-4 text-white placeholder-text-dim focus:ring-1 focus:ring-primary focus:border-primary resize-none"
+                className="w-full flex-1 min-h-[150px] bg-panel border border-border rounded-xl p-4 text-white placeholder-text-dim focus:ring-1 focus:ring-primary focus:border-primary resize-none mb-4"
               />
+              
+              <div className="mt-auto">
+                <label className="block text-sm font-semibold mb-2">Link a goal to this session (Optional)</label>
+                <Select
+                  value={selectedGoalId}
+                  onChange={setSelectedGoalId}
+                  options={[
+                    { value: "", label: "-- Select a goal --" },
+                    ...goals.filter(g => g.userId === currentUser.id).map(goal => ({
+                      value: goal.id.toString(),
+                      label: goal.title
+                    }))
+                  ]}
+                  placeholder="-- Select a goal --"
+                />
+              </div>
             </div>
           )}
 
@@ -312,9 +358,9 @@ export default function BookingModal({ isOpen, onClose, mentor }) {
                 className="w-full max-w-sm bg-surface border border-[#2a2a3a] rounded-2xl p-5 text-left"
               >
                 <div className="flex items-center gap-3 pb-4 border-b border-[#2a2a3a]">
-                  <img src={mentor?.avatar} alt="Mentor Avatar" className="w-12 h-12 rounded-full object-cover" />
+                  <LazyImage src={mentor?.avatar || mentor?.avatar_url} alt="Mentor Avatar" className="w-12 h-12 rounded-full object-cover" placeholderClassName="w-12 h-12 rounded-full" />
                   <div>
-                    <div className="text-white font-semibold text-sm">{mentor?.name}</div>
+                    <div className="text-white font-semibold text-sm">{mentor?.name || mentor?.full_name}</div>
                     <div className="text-text-dim text-xs font-mono">{mentor?.college} • {mentor?.company}</div>
                   </div>
                 </div>

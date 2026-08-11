@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { useStore } from '../store/useStore';
 import { mentees, mentors } from '../data/mockData';
 
+
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import FileUpload from '../components/ui/FileUpload';
@@ -16,6 +17,7 @@ import ToggleCard from '../components/ui/ToggleCard';
 import StepProgress from '../components/ui/StepProgress';
 import WeeklyGrid from '../components/ui/WeeklyGrid';
 import Autocomplete from '../components/ui/Autocomplete';
+import Select from '../components/ui/Select';
 import { cn } from '../utils/helpers';
 
 const COLLEGES = ['BITS Pilani', 'BITS Sathy', 'IIT Madras', 'IIT Bombay', 'IIT Delhi', 'NIT Trichy', 'NIT Surathkal', 'VIT Vellore', 'PSG Tech', 'Anna University', 'Amrita', 'SRM', 'Manipal'];
@@ -86,25 +88,56 @@ export default function Register() {
     setStep(s => Math.max(0, s - 1));
   };
 
-  const handleFinalSubmit = (e) => {
+  const handleFinalSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitLoading(true);
 
-    setTimeout(() => {
-      setIsSubmitLoading(false);
+    try {
+      // MOCK REGISTRATION
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network request
+      
+      const newUser = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: role,
+        accountStatus: 'active',
+        isVerified: role === 'mentee',
+        approvalStatus: role === 'mentor' ? 'Pending' : undefined,
+        avatar: formData.profilePhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&background=7c3aed&color=fff&size=200`,
+        college: formData.college,
+        branch: formData.branch,
+        year: formData.year || '1st',
+        company: formData.currentCompany || formData.internCompany || '',
+        skills: formData.technicalSkills || [],
+        bio: formData.bio || '',
+        linkedin: formData.linkedin || '',
+        github: formData.github || '',
+        portfolio: formData.portfolio || '',
+        sessionTypes: formData.sessionTypes || ['Career Chat'],
+        isAvailable: true,
+        verificationDocuments: role === 'mentor' ? ['Resume_Uploaded.pdf'] : [],
+        createdAt: new Date().toISOString()
+      };
+
+      const { registerNewUser } = useStore.getState();
+      registerNewUser(newUser);
+
+      const { users } = useStore.getState();
+      const savedUser = users.find(u => u.email.toLowerCase() === formData.email.toLowerCase()) || newUser;
+
       confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#7c3aed', '#f472b6', '#ffffff'] });
       toast.success('Registration successful!', { style: { background: '#16161e', color: '#fff', border: '1px solid #2a2a3a' } });
       
-      if (role === 'mentor') {
-        const mockNewMentor = { ...mentors[0], name: formData.name, email: formData.email };
-        login(mockNewMentor, 'mentor');
-        setStep(100); // 100 representing success for mentor
-      } else {
-        const mockNewMentee = { ...mentees[0], name: formData.name, email: formData.email };
-        login(mockNewMentee, 'mentee');
-        setStep(100); // success step
-      }
-    }, 1500);
+      login(savedUser, role);
+      setStep(100);
+
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast.error(error.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsSubmitLoading(false);
+    }
   };
 
   const addAchievement = () => {
@@ -165,8 +198,8 @@ export default function Register() {
               ? "Your profile is under review. We'll notify you within 24 hours." 
               : "You're all set! Start finding your perfect mentor today."}
           </p>
-          <Button size="lg" fullWidth onClick={() => navigate(role === 'mentor' ? '/mentor/dashboard' : '/mentors')}>
-             {role === 'mentor' ? 'Go to Dashboard' : 'Browse Mentors'} <ArrowRight className="w-5 h-5 ml-2" />
+          <Button size="lg" fullWidth onClick={() => navigate('/onboarding')}>
+             Continue to Onboarding <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
       )
@@ -225,13 +258,14 @@ export default function Register() {
                 <h3 className="text-2xl font-bold text-white mb-6">Academic Info</h3>
                 <div className="grid md:grid-cols-2 gap-6">
                   <Autocomplete label="College / University" required suggestions={[...COLLEGES, 'Other']} placeholder="Search college..." value={formData.college} onChange={v=>update('college', v)} />
-                  <div>
-                    <label className="block font-mono text-xs text-text-dim uppercase tracking-wider mb-2">Branch / Department <span className="text-red-500">*</span></label>
-                    <select required className="w-full bg-surface border-border text-white border rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none" value={formData.branch} onChange={e=>update('branch', e.target.value)}>
-                      <option value="">Select Branch</option>
-                      {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
-                    </select>
-                  </div>
+                  <Select
+                    label="Branch / Department"
+                    required
+                    options={BRANCHES}
+                    value={formData.branch}
+                    onChange={v => update('branch', v)}
+                    placeholder="Select Branch"
+                  />
                   <div>
                     <label className="block font-mono text-xs text-text-dim uppercase tracking-wider mb-3">Year / Status <span className="text-red-500">*</span></label>
                     <div className="flex flex-wrap gap-4">
@@ -247,13 +281,14 @@ export default function Register() {
                     <Input label="CGPA (Optional)" type="number" min="0" max="10" step="0.01" placeholder="e.g. 8.5" value={formData.cgpa} onChange={e=>update('cgpa', e.target.value)} />
                   )}
                   
-                  <div>
-                    <label className="block font-mono text-xs text-text-dim uppercase tracking-wider mb-2">Graduation Year <span className="text-red-500">*</span></label>
-                    <select required className="w-full bg-surface border-border text-white border rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none" value={formData.graduationYear} onChange={e=>update('graduationYear', e.target.value)}>
-                      <option value="">Select Year</option>
-                      {Array.from({length: 11}, (_, i) => 2020 + i).map(year => <option key={year} value={year}>{year}</option>)}
-                    </select>
-                  </div>
+                  <Select
+                    label="Graduation Year"
+                    required
+                    options={Array.from({length: 11}, (_, i) => 2020 + i)}
+                    value={formData.graduationYear}
+                    onChange={v => update('graduationYear', v)}
+                    placeholder="Select Year"
+                  />
                 </div>
               </>
             )}
@@ -369,13 +404,13 @@ export default function Register() {
                               </div>
                             </div>
 
-                            <div>
-                              <label className="block font-mono text-xs text-text-dim uppercase tracking-wider mb-2">Annual CTC (Optional)</label>
-                              <select className="w-full bg-surface border-border text-white border rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none" value={formData.ctc} onChange={e=>update('ctc', e.target.value)}>
-                                <option value="">Select Range</option>
-                                {['Prefer not to say', 'Under 5 LPA', '5-10 LPA', '10-20 LPA', '20-30 LPA', '30+ LPA'].map(c => <option key={c} value={c}>{c}</option>)}
-                              </select>
-                            </div>
+                            <Select
+                              label="Annual CTC (Optional)"
+                              options={['Prefer not to say', 'Under 5 LPA', '5-10 LPA', '10-20 LPA', '20-30 LPA', '30+ LPA']}
+                              value={formData.ctc}
+                              onChange={v => update('ctc', v)}
+                              placeholder="Select Range"
+                            />
                             
                             <FileUpload label="Upload Offer Letter (optional - builds trust with mentees)" value={formData.offerLetter?.file} preview={formData.offerLetter?.preview} onChange={(data) => update('offerLetter', data)} accept=".pdf,image/*" />
                             <p className="text-xs text-text-dim col-span-2">🔒 Only shown as verified badge, not publicly visible</p>
@@ -419,13 +454,14 @@ export default function Register() {
                               </div>
                             </div>
 
-                            <div className="col-span-2 md:col-span-1">
-                              <label className="block font-mono text-xs text-text-dim uppercase tracking-wider mb-2">Stipend Range (Optional)</label>
-                              <select className="w-full bg-surface border-border text-white border rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none" value={formData.stipend} onChange={e=>update('stipend', e.target.value)}>
-                                <option value="">Select Range</option>
-                                {['Prefer not to say', 'Under ₹10k/month', '₹10k-20k', '₹20k-40k', '₹40k-60k', '₹60k+'].map(c => <option key={c} value={c}>{c}</option>)}
-                              </select>
-                            </div>
+                            <Select
+                              label="Stipend Range (Optional)"
+                              className="col-span-2 md:col-span-1"
+                              options={['Prefer not to say', 'Under ₹10k/month', '₹10k-20k', '₹20k-40k', '₹40k-60k', '₹60k+']}
+                              value={formData.stipend}
+                              onChange={v => update('stipend', v)}
+                              placeholder="Select Range"
+                            />
 
                             <div className="col-span-2 md:col-span-1 flex items-center h-full pt-6">
                               <label className="flex items-center gap-3 cursor-pointer border border-border rounded-xl bg-panel px-4 py-3 w-full">
@@ -460,13 +496,14 @@ export default function Register() {
                                <TagInput label="Target Companies (Optional)" placeholder="Type company name and press Enter..." tags={formData.targetCompanies} onChange={v=>update('targetCompanies', v)} suggestions={['Google', 'Microsoft', 'Amazon', 'Flipkart', 'Razorpay']} />
                                <TagInput label="Target Roles (Optional)" placeholder="SDE, ML Engineer, Data Scientist..." tags={formData.targetRoles} onChange={v=>update('targetRoles', v)} />
                                
-                               <div className="col-span-2 md:col-span-1">
-                                <label className="block font-mono text-xs text-text-dim uppercase tracking-wider mb-2">Target CTC (Optional)</label>
-                                <select className="w-full bg-surface border-border text-white border rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none" value={formData.targetCtc} onChange={e=>update('targetCtc', e.target.value)}>
-                                  <option value="">Select Range</option>
-                                  {['No preference', '5-10 LPA', '10-20 LPA', '20+ LPA'].map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                              </div>
+                               <Select
+                                 label="Target CTC (Optional)"
+                                 className="col-span-2 md:col-span-1"
+                                 options={['No preference', '5-10 LPA', '10-20 LPA', '20+ LPA']}
+                                 value={formData.targetCtc}
+                                 onChange={v => update('targetCtc', v)}
+                                 placeholder="Select Range"
+                               />
 
                               <Input label="Interviews Given So Far" type="number" placeholder="How many interviews have you appeared in?" value={formData.interviewsGiven} onChange={e=>update('interviewsGiven', e.target.value)} />
                             </div>
@@ -649,15 +686,17 @@ export default function Register() {
                 <WeeklyGrid value={formData.availability} onChange={v => update('availability', v)} />
                 
                 <div className="grid sm:grid-cols-2 gap-6 mt-6">
-                  <div>
-                    <label className="block font-mono text-xs text-text-dim uppercase tracking-wider mb-2">Timezone</label>
-                    <select className="w-full bg-surface border-border text-white border rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none" value={formData.timezone} onChange={e=>update('timezone', e.target.value)}>
-                      <option value="IST">IST - Indian Standard Time</option>
-                      <option value="PST">PST - Pacific Standard Time</option>
-                      <option value="EST">EST - Eastern Standard Time</option>
-                      <option value="GMT">GMT - Greenwich Mean Time</option>
-                    </select>
-                  </div>
+                  <Select
+                    label="Timezone"
+                    options={[
+                      { value: 'IST', label: 'IST - Indian Standard Time' },
+                      { value: 'PST', label: 'PST - Pacific Standard Time' },
+                      { value: 'EST', label: 'EST - Eastern Standard Time' },
+                      { value: 'GMT', label: 'GMT - Greenwich Mean Time' }
+                    ]}
+                    value={formData.timezone}
+                    onChange={v => update('timezone', v)}
+                  />
                   <Input label="I'm available starting from" type="date" value={formData.availableFrom} onChange={e=>update('availableFrom', e.target.value)} required />
                 </div>
               </>
@@ -691,9 +730,12 @@ export default function Register() {
                     <div className="space-y-3 mb-3">
                       {formData.achievements.map((ach, idx) => (
                         <div key={idx} className="flex items-center gap-3 animate-fadeUp">
-                           <select className="bg-panel border-border text-xs text-white border rounded-lg py-3 px-2 focus:ring-1 focus:ring-primary focus:border-primary w-1/3" value={ach.category} onChange={e=>updateAchievement(idx, 'category', e.target.value)}>
-                             {['Internship', 'Hackathon', 'Certification', 'Competition', 'Project', 'Other'].map(c => <option key={c} value={c}>{c}</option>)}
-                           </select>
+                           <Select
+                             className="w-1/3"
+                             options={['Internship', 'Hackathon', 'Certification', 'Competition', 'Project', 'Other']}
+                             value={ach.category}
+                             onChange={v => updateAchievement(idx, 'category', v)}
+                           />
                            <input type="text" className="bg-surface border-border text-sm text-white border rounded-lg py-2.5 px-3 focus:ring-1 focus:ring-primary focus:border-primary w-full" placeholder="e.g. Winner at SIH 2023" value={ach.description} onChange={e=>updateAchievement(idx, 'description', e.target.value)} required />
                            <button type="button" onClick={() => removeAchievement(idx)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors bg-panel border border-border"><X className="w-4 h-4" /></button>
                         </div>

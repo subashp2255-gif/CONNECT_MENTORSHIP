@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Sparkles, Menu, X, ChevronDown, LogOut } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Sparkles, Menu, X, ChevronDown, LogOut, BookOpen, MessageSquare } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store/useStore';
 import { cn } from '../../utils/helpers';
 import Button from '../ui/Button';
+import NotificationBell from '../mentorship/NotificationBell';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -12,6 +13,14 @@ export default function Navbar() {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const { isLoggedIn, currentUser, role, logout } = useStore();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    setIsProfileDropdownOpen(false);
+    setIsMobileMenuOpen(false);
+    navigate('/');
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,13 +35,20 @@ export default function Navbar() {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  const navLinks = [
-    { name: 'Find Mentors', href: '/mentors' },
-  ];
+  const navLinks = [];
+  if (role !== 'mentor') {
+    navLinks.push({ name: 'Find Mentors', href: '/mentors' });
+  }
+  navLinks.push({ name: 'Discussion Forum', href: '/forum' });
 
   if (isLoggedIn) {
+    navLinks.push({ name: 'SOCIAL', href: '/feed' });
+    if (role === 'mentee') {
+      navLinks.push({ name: 'Following Mentors', href: '/following-mentors' });
+    }
     navLinks.push({ name: 'Dashboard', href: role === 'mentor' ? '/mentor/dashboard' : '/dashboard' });
-    navLinks.push({ name: 'Messages', href: '/messages' });
+    navLinks.push({ name: 'Tasks', href: role === 'mentor' ? '/mentor/dashboard?tab=goals' : '/dashboard?tab=goals' });
+    navLinks.push({ name: 'Notes', href: '/notes', icon: BookOpen });
   }
 
   return (
@@ -108,32 +124,46 @@ export default function Navbar() {
                 </Link>
               </>
             ) : (
-              <div className="relative">
-                <button
-                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                  onBlur={() => setTimeout(() => setIsProfileDropdownOpen(false), 200)}
-                  className="flex items-center gap-2 p-1.5 pr-3 rounded-full border border-border bg-panel hover:bg-white/5 transition-colors focus:outline-none focus:ring-1 focus:ring-primary"
-                >
-                  <img src={currentUser.avatar} alt="Avatar" className="w-8 h-8 rounded-full bg-surface" />
-                  <span className="text-sm font-medium text-white max-w-[100px] truncate">{currentUser.name}</span>
-                  <ChevronDown className="w-4 h-4 text-text-muted" />
-                </button>
-                
-                {isProfileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-surface border border-border rounded-xl shadow-xl overflow-hidden animate-fadeUp origin-top-right">
-                    <div className="p-4 border-b border-border">
-                      <p className="text-sm font-medium text-white truncate">{currentUser.name}</p>
-                      <p className="text-xs text-text-muted truncate capitalize">{role}</p>
-                    </div>
-                    <div className="p-2">
-                       <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-left">
-                         <LogOut className="w-4 h-4" />
-                         Log out
-                       </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <>
+                <Link to="/messages" className="relative p-2 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors focus:outline-none">
+                  <MessageSquare className="w-5 h-5" />
+                </Link>
+                <NotificationBell />
+                <div className="relative">
+                  <button
+                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                    onBlur={() => setTimeout(() => setIsProfileDropdownOpen(false), 200)}
+                    className="flex items-center gap-2 p-1.5 pr-3 rounded-full border border-border bg-panel hover:bg-white/5 transition-colors focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    <img src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || 'User')}&background=random`} alt="Avatar" className="w-8 h-8 rounded-full bg-surface" />
+                    <span className="text-sm font-medium text-white max-w-[100px] truncate">{currentUser?.name || 'User'}</span>
+                    <ChevronDown className={cn("w-4 h-4 text-text-muted transition-transform duration-200", isProfileDropdownOpen && "rotate-180")} />
+                  </button>
+                  
+                  <AnimatePresence>
+                    {isProfileDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 mt-2 w-48 bg-[#16161e] border border-border rounded-xl shadow-xl overflow-hidden origin-top-right z-50"
+                      >
+                        <div className="p-4 border-b border-border">
+                          <p className="text-sm font-medium text-white truncate">{currentUser?.name || 'User'}</p>
+                          <p className="text-xs text-text-muted truncate capitalize">{role}</p>
+                        </div>
+                        <div className="p-2 bg-panel/30">
+                          <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-left">
+                            <LogOut className="w-4 h-4" />
+                            Log out
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </>
             )}
           </div>
 
@@ -176,13 +206,13 @@ export default function Navbar() {
             ) : (
               <div className="px-4 space-y-4">
                 <div className="flex items-center gap-3">
-                  <img src={currentUser.avatar} alt="Avatar" className="w-10 h-10 rounded-full" />
+                  <img src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || 'User')}&background=random`} alt="Avatar" className="w-10 h-10 rounded-full" />
                   <div>
-                    <p className="text-base font-medium text-white">{currentUser.name}</p>
+                    <p className="text-base font-medium text-white">{currentUser?.name || 'User'}</p>
                     <p className="text-sm text-text-muted capitalize">{role}</p>
                   </div>
                 </div>
-                <Button variant="danger" fullWidth onClick={logout}>
+                <Button variant="danger" fullWidth onClick={handleLogout}>
                   Log out
                 </Button>
               </div>

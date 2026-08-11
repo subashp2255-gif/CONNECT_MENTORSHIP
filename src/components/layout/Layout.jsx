@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import CommandPalette from './CommandPalette';
 
 export default function Layout() {
   return (
@@ -11,6 +12,7 @@ export default function Layout() {
       
       <div className="relative z-10 flex flex-col flex-1">
         <Navbar />
+        <CommandPalette />
         <main className="flex-1 w-full pt-20 flex flex-col relative"> 
           {/* pt-20 accounts for sticky navbar */}
           <Outlet />

@@ -11,6 +11,9 @@ const buttonVariants = cva(
         outline: 'border-2 border-primary/50 text-white hover:bg-primary/10',
         ghost: 'text-gray-300 hover:text-white hover:bg-white/5',
         danger: 'bg-red-500/20 text-red-500 hover:bg-red-500/30 border border-red-500/50',
+        success: 'bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/50',
+        successSolid: 'bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/25',
+        secondary: 'bg-primary/20 text-primary-light border border-primary/50 hover:bg-primary/30',
       },
       size: {
         sm: 'h-9 px-4 text-sm',

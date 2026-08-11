@@ -43,7 +43,7 @@ export function MentorCard({ mentor }) {
             <span className="font-bold text-white">{mentor.totalSessions}</span> sessions
           </div>
           <Link to={`/mentors/${mentor.id}`} className="w-1/2">
-            <Button variant="outline" size="sm" className="w-full text-xs">View Profile</Button>
+            <Button variant="outline" size="sm" className="w-full font-mono text-[10px] font-bold tracking-widest text-primary-light hover:text-white uppercase">View Profile</Button>
           </Link>
         </div>
       </CardContent>

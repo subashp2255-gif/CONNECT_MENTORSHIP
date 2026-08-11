@@ -380,6 +380,8 @@ export const sessions = [
   { id: "s3", mentorId: "m3", menteeId: "u3", type: "Project Guidance", scheduledAt: "2024-11-05T10:00:00Z", duration: 60, status: "completed", meetLink: "https://meet.google.com/xyz-uvwx-yza", feedback: "Helped debug my app.", rating: 4 },
   { id: "s4", mentorId: "m4", menteeId: "u4", type: "DSA Practice", scheduledAt: "2025-05-18T18:00:00Z", duration: 60, status: "upcoming", meetLink: "https://meet.google.com/bcd-efgh-ijk", feedback: null, rating: null },
   { id: "s5", mentorId: "m1", menteeId: "u5", type: "Resume Review", scheduledAt: "2025-05-20T16:00:00Z", duration: 30, status: "upcoming", meetLink: "https://meet.google.com/lmn-opqr-stu", feedback: null, rating: null },
+  { id: "s99", mentorId: "m1", menteeId: "u3", type: "Career Chat", scheduledAt: "2025-06-01T10:00:00Z", duration: 30, status: "pending", meetLink: null, feedback: null, rating: null },
+  { id: "s100", mentorId: "m1", menteeId: "u4", type: "Project Guidance", scheduledAt: "2025-06-02T14:00:00Z", duration: 60, status: "pending", meetLink: null, feedback: null, rating: null },
   { id: "s6", mentorId: "m6", menteeId: "u1", type: "Resume Review", scheduledAt: "2025-05-22T11:00:00Z", duration: 30, status: "upcoming", meetLink: "https://meet.google.com/vwx-yzab-cde", feedback: null, rating: null },
   { id: "s7", mentorId: "m8", menteeId: "u6", type: "Project Guidance", scheduledAt: "2025-05-25T15:00:00Z", duration: 60, status: "upcoming", meetLink: "https://meet.google.com/fgh-ijkl-mno", feedback: null, rating: null },
   { id: "s8", mentorId: "m11", menteeId: "u7", type: "Career Chat", scheduledAt: "2024-09-12T10:00:00Z", duration: 30, status: "cancelled", meetLink: "https://meet.google.com/abc-defg-hij", feedback: null, rating: null },
